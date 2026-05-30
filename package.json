@@ -22,6 +22,7 @@
     "test:cov": "vitest run --coverage",
     "migrate": "tsx src/db/migrate.ts",
     "verify-balances": "tsx src/jobs/balance-verification.ts --cli",
+    "docs:pdf": "node scripts/generate-project-pdf.mjs",
     "db:generate": "drizzle-kit generate",
     "prepare": "husky"
   },
@@ -52,6 +53,7 @@
     "fast-check": "^3.23.2",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
+    "playwright": "^1.60.0",
     "prettier": "^3.5.1",
     "supertest": "^7.0.0",
     "testcontainers": "^10.18.0",

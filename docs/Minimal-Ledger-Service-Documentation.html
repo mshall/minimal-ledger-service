@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Minimal Ledger Service — Technical Documentation</title>
+  <style>
+    @page { size: A4; margin: 18mm 16mm 22mm 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1a1a2e;
+      line-height: 1.55;
+      font-size: 10.5pt;
+      margin: 0;
+      background: #f8f9fc;
+    }
+    .page { max-width: 210mm; margin: 0 auto; background: #fff; }
+
+    /* Cover */
+    .cover {
+      min-height: 260mm;
+      background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 45%, #0d9488 100%);
+      color: #fff;
+      padding: 48px 40px;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cover-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 9pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .cover h1 {
+      font-size: 32pt;
+      font-weight: 700;
+      margin: 24px 0 12px;
+      line-height: 1.15;
+    }
+    .cover .subtitle { font-size: 14pt; opacity: 0.9; max-width: 90%; }
+    .cover-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-box .num { font-size: 22pt; font-weight: 700; color: #5eead4; }
+    .stat-box .lbl { font-size: 8.5pt; opacity: 0.85; margin-top: 4px; }
+    .cover-footer { font-size: 9pt; opacity: 0.7; }
+
+    /* Content blocks */
+    .content { padding: 32px 36px; }
+    h2.page-title {
+      font-size: 18pt;
+      color: #0f172a;
+      border-bottom: 3px solid #0d9488;
+      padding-bottom: 8px;
+      margin: 0 0 20px;
+      page-break-after: avoid;
+    }
+    .summary-box {
+      background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+      border-left: 4px solid #0d9488;
+      padding: 20px 24px;
+      border-radius: 0 12px 12px 0;
+      margin-bottom: 28px;
+    }
+    .summary-box p { margin: 0 0 10px; }
+    .summary-box ul { margin: 8px 0 0; padding-left: 20px; }
+    .summary-box li { margin-bottom: 6px; }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 28px;
+      font-size: 9.5pt;
+      page-break-inside: avoid;
+    }
+    table.data-table th {
+      background: #0f172a;
+      color: #fff;
+      text-align: left;
+      padding: 10px 12px;
+      font-weight: 600;
+    }
+    table.data-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    table.data-table tr:nth-child(even) td { background: #f8fafc; }
+    .pill {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 8.5pt;
+      font-weight: 600;
+    }
+    code { font-family: 'SF Mono', Consolas, monospace; font-size: 8.5pt; color: #0f766e; }
+
+    .toc {
+      background: #f1f5f9;
+      padding: 20px 24px;
+      border-radius: 12px;
+      margin-bottom: 28px;
+      page-break-after: always;
+    }
+    .toc h3 { margin: 0 0 12px; font-size: 12pt; }
+    .toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 24px; }
+    .toc li { margin-bottom: 6px; font-size: 9.5pt; }
+
+    .doc-section { margin-bottom: 36px; page-break-before: auto; }
+    .section-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--accent);
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      page-break-after: avoid;
+    }
+    .section-banner h2 { margin: 0; font-size: 14pt; }
+    .section-icon { font-size: 20pt; }
+
+    .file-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .file-header {
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .file-path { font-family: monospace; font-weight: 700; color: #0f172a; font-size: 9pt; }
+    .file-meta { font-size: 8pt; color: #64748b; }
+    .file-purpose {
+      padding: 12px 14px;
+      background: #fffbeb;
+      border-bottom: 1px solid #fde68a;
+      font-size: 9.5pt;
+      color: #78350f;
+    }
+    pre.code-block {
+      margin: 0;
+      padding: 12px 14px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'SF Mono', Consolas, 'Liberation Mono', monospace;
+      font-size: 6.8pt;
+      line-height: 1.35;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: none;
+    }
+    pre.code-block code { color: inherit; background: none; font-size: inherit; }
+
+    .architecture-diagram {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 8.5pt;
+      line-height: 1.8;
+      margin: 20px 0;
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="cover">
+    <div>
+      <span class="cover-badge">Technical Documentation</span>
+      <h1>Minimal Ledger Service</h1>
+      <p class="subtitle">Production-grade double-entry ledger API — architecture, stack, and source reference</p>
+      <div class="cover-stats">
+        <div class="stat-box"><div class="num">28</div><div class="lbl">Source modules</div></div>
+        <div class="stat-box"><div class="num">4</div><div class="lbl">Core API capabilities</div></div>
+        <div class="stat-box"><div class="num">1</div><div class="lbl">DB-enforced invariant</div></div>
+      </div>
+    </div>
+    <div class="cover-footer">Generated 2026-05-26 · Node.js 22 · PostgreSQL 16</div>
+  </div>
+
+  <div class="content">
+    <h2 class="page-title">Executive Summary</h2>
+    <div class="summary-box">
+      <p><strong>Minimal Ledger Service</strong> is a take-home-grade banking core: a HTTP API for creating accounts, posting atomic double-entry transactions, reading balances and statements, and guaranteeing exactly-once writes via idempotency keys.</p>
+      <p>Correctness is enforced in layers:</p>
+      <ul>
+        <li><strong>Database:</strong> deferrable Postgres trigger ensures debits = credits per currency at COMMIT.</li>
+        <li><strong>Application:</strong> row locks (sorted account order), currency checks, optimistic balance versions.</li>
+        <li><strong>Operations:</strong> journal vs materialised balance verifier, Prometheus metrics, structured logs.</li>
+      </ul>
+      <p>Money is represented as <code>bigint</code> minor units end-to-end; the journal (<code>entries</code>) is append-only and authoritative.</p>
+    </div>
+
+    <div class="architecture-diagram">
+      Client (curl / SDK)<br/>↓ Idempotency-Key + JSON<br/>
+      <strong>HTTP Layer</strong> (Fastify routes, plugins, RFC 7807 errors)<br/>↓<br/>
+      <strong>Services</strong> (accounts · transactions · idempotency)<br/>↓<br/>
+      <strong>Repositories</strong> (Drizzle SQL)<br/>↓<br/>
+      <strong>PostgreSQL 16</strong> (journal + trigger + idempotency cache)
+    </div>
+
+    <nav class="toc">
+      <h3>Table of Contents</h3>
+      <ol>
+        <li>Executive Summary</li>
+        <li>Tech Stack</li>
+        <li>Project Breakdown</li>
+        <li>Entry &amp; Configuration</li><li>Database Layer</li><li>Domain Layer</li><li>Repositories</li><li>Services</li><li>HTTP Layer</li><li>Jobs</li><li>Observability</li>
+      </ol>
+    </nav>
+
+    <h2 class="page-title" style="page-break-before: always;">Tech Stack</h2>
+    <table class="data-table">
+      <thead><tr><th>Concern</th><th>Technology</th></tr></thead>
+      <tbody><tr><td><span class="pill">Runtime</span></td><td>Node.js 22 LTS</td></tr><tr><td><span class="pill">Language</span></td><td>TypeScript 5.x (strict, noUncheckedIndexedAccess)</td></tr><tr><td><span class="pill">HTTP</span></td><td>Fastify 5</td></tr><tr><td><span class="pill">Database</span></td><td>PostgreSQL 16</td></tr><tr><td><span class="pill">ORM / migrations</span></td><td>Drizzle ORM + drizzle-kit</td></tr><tr><td><span class="pill">Pool</span></td><td>pg (node-postgres)</td></tr><tr><td><span class="pill">Validation</span></td><td>Zod</td></tr><tr><td><span class="pill">API docs</span></td><td>@fastify/swagger + swagger-ui (OpenAPI 3.1)</td></tr><tr><td><span class="pill">Logging</span></td><td>pino (+ pino-pretty in dev)</td></tr><tr><td><span class="pill">Metrics</span></td><td>prom-client</td></tr><tr><td><span class="pill">Testing</span></td><td>Vitest, Supertest, Testcontainers, fast-check</td></tr><tr><td><span class="pill">Lint / format</span></td><td>ESLint (typescript-eslint strict) + Prettier</td></tr><tr><td><span class="pill">IDs</span></td><td>UUID v7 (uuid package)</td></tr><tr><td><span class="pill">Money</span></td><td>native bigint (minor units)</td></tr><tr><td><span class="pill">Containers</span></td><td>Docker multi-stage + docker-compose</td></tr></tbody>
+    </table>
+
+    <h2 class="page-title">Project Breakdown</h2>
+    <table class="data-table">
+      <thead><tr><th>Area</th><th>Key paths</th><th>Responsibility</th></tr></thead>
+      <tbody><tr><td><strong>Entry &amp; config</strong></td><td><code>index.ts, app.ts, config.ts</code></td><td>Boot, Fastify assembly, env validation</td></tr><tr><td><strong>Database</strong></td><td><code>db/schema.ts, client.ts, migrate.ts</code></td><td>Drizzle schema, pool, SQL migrations</td></tr><tr><td><strong>Domain</strong></td><td><code>domain/*.ts</code></td><td>Money, accounts, posting rules, errors</td></tr><tr><td><strong>Repositories</strong></td><td><code>repositories/*.ts</code></td><td>Dumb SQL accessors</td></tr><tr><td><strong>Services</strong></td><td><code>services/*.ts</code></td><td>Business orchestration + transactions</td></tr><tr><td><strong>HTTP</strong></td><td><code>http/routes, plugins, schemas, error-handler</code></td><td>REST API + idempotency</td></tr><tr><td><strong>Jobs</strong></td><td><code>jobs/balance-verification.ts</code></td><td>Journal vs materialised reconciliation</td></tr><tr><td><strong>Observability</strong></td><td><code>observability/*.ts</code></td><td>Structured logs + Prometheus</td></tr><tr><td><strong>Migrations</strong></td><td><code>migrations/0001_init.sql</code></td><td>Schema + deferred double-entry trigger</td></tr></tbody>
+    </table>
+
+    <h2 class="page-title" style="page-break-before: always;">Source Code Reference</h2>
+    <p style="color:#64748b;font-size:9.5pt;margin-bottom:24px;">Full source listings for application code under <code>src/</code> and the initial migration. Infrastructure-only directories (e.g. <code>dist/</code>, <code>.github/</code>, <code>tests/</code>) are omitted by design.</p>
+    
+      <section class="doc-section" id="entry-&amp;-configuration">
+        <div class="section-banner" style="--accent:#1e3a5f">
+          <span class="section-icon">⚙️</span>
+          <h2>Entry &amp; Configuration</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/index.ts</span>
+            <span class="file-meta">66 lines · Process entrypoint</span>
+          </header>
+          <div class="file-purpose">Loads config, runs migrations in development, builds Fastify, schedules idempotency cleanup and optional balance verification, listens on PORT, and implements graceful shutdown on SIGTERM/SIGINT with pool drain.</div>
+          <pre class="code-block"><code>import { loadConfig } from './config.js';
+import { createDbContext } from './db/client.js';
+import { buildApp } from './app.js';
+import { migrate } from './db/migrate.js';
+import { startBalanceVerificationScheduler } from './jobs/balance-verification.js';
+import { createLogger, getLogger } from './observability/logger.js';
+import { IdempotencyRepository } from './repositories/idempotency.repo.js';
+import { IdempotencyService } from './services/idempotency.service.js';
+
+async function main(): Promise&lt;void&gt; {
+  const config = loadConfig();
+  const logger = createLogger(config);
+  const dbContext = createDbContext(config);
+
+  if (config.nodeEnv === 'development') {
+    await migrate();
+  }
+
+  const app = await buildApp({ config, dbContext, logger });
+
+  const idempotencyService = new IdempotencyService(new IdempotencyRepository());
+  if (config.idempotencyCleanupIntervalMs &gt; 0) {
+    setInterval(() =&gt; {
+      void idempotencyService.cleanupExpired(dbContext.db, config.idempotencyTtlHours);
+    }, config.idempotencyCleanupIntervalMs);
+  }
+
+  const balanceScheduler = startBalanceVerificationScheduler(
+    dbContext.db,
+    config.balanceVerifyIntervalMs,
+  );
+
+  await app.listen({ port: config.port, host: config.host });
+  logger.info({ port: config.port }, 'Ledger service listening');
+
+  const shutdown = async (signal: string) =&gt; {
+    logger.info({ signal }, 'Shutting down');
+    if (balanceScheduler) {
+      clearInterval(balanceScheduler);
+    }
+
+    await app.close();
+    await dbContext.pool.end();
+    logger.info('Shutdown complete');
+    process.exit(0);
+  };
+
+  const forceExit = setTimeout(() =&gt; {
+    getLogger().error('Shutdown timeout exceeded');
+    process.exit(1);
+  }, config.shutdownTimeoutMs);
+  forceExit.unref();
+
+  process.on('SIGTERM', () =&gt; {
+    void shutdown('SIGTERM');
+  });
+  process.on('SIGINT', () =&gt; {
+    void shutdown('SIGINT');
+  });
+}
+
+main().catch((err: unknown) =&gt; {
+  console.error(err);
+  process.exit(1);
+});
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/app.ts</span>
+            <span class="file-meta">70 lines · Application factory</span>
+          </header>
+          <div class="file-purpose">buildApp() wires Swagger, request context, idempotency plugin, health/metrics routes, and v1 API routes. Records HTTP Prometheus metrics on every response without coupling domain code to HTTP.</div>
+          <pre class="code-block"><code>import { randomUUID } from 'node:crypto';
+import Fastify from 'fastify';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
+import type { AppConfig } from './config.js';
+import type { DbContext } from './db/client.js';
+import { errorHandler } from './http/error-handler.js';
+import { idempotencyPlugin } from './http/idempotency.plugin.js';
+import { requestContextPlugin } from './http/request-context.plugin.js';
+import { accountsRoutes } from './http/routes/accounts.routes.js';
+import { healthRoutes } from './http/routes/health.routes.js';
+import { transactionsRoutes } from './http/routes/transactions.routes.js';
+import { httpRequestDurationSeconds, httpRequestsTotal } from './observability/metrics.js';
+import type { Logger } from 'pino';
+
+export type AppDependencies = {
+  config: AppConfig;
+  dbContext: DbContext;
+  logger: Logger;
+};
+
+export async function buildApp(deps: AppDependencies) {
+  const app = Fastify({
+    loggerInstance: deps.logger,
+    requestIdHeader: 'x-request-id',
+    genReqId: (req) =&gt; {
+      const header = req.headers['x-request-id'];
+      return typeof header === 'string' ? header : randomUUID();
+    },
+  });
+
+  app.setErrorHandler(errorHandler);
+
+  await app.register(swagger, {
+    openapi: {
+      openapi: '3.1.0',
+      info: {
+        title: 'Minimal Ledger Service',
+        description: 'Production-grade double-entry ledger API',
+        version: '1.0.0',
+      },
+      servers: [{ url: `http://localhost:${String(deps.config.port)}` }],
+    },
+  });
+
+  await app.register(swaggerUi, {
+    routePrefix: '/docs',
+  });
+
+  await app.register(requestContextPlugin);
+
+  app.addHook('onResponse', async (request, reply) =&gt; {
+    const route = request.routeOptions.url ?? request.url;
+    const labels = {
+      method: request.method,
+      route,
+      status: String(reply.statusCode),
+    };
+    httpRequestsTotal.inc(labels);
+    httpRequestDurationSeconds.observe(labels, reply.elapsedTime / 1000);
+  });
+
+  await app.register(idempotencyPlugin, { db: deps.dbContext.db });
+  await app.register(healthRoutes, { pool: deps.dbContext.pool });
+  await app.register(accountsRoutes, { db: deps.dbContext.db });
+  await app.register(transactionsRoutes, { db: deps.dbContext.db });
+
+  return app;
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/config.ts</span>
+            <span class="file-meta">50 lines · Environment validation</span>
+          </header>
+          <div class="file-purpose">Zod schema over process.env; fails fast at boot if DATABASE_URL or other required settings are invalid. Centralises shutdown timeout, idempotency TTL, and scheduler intervals.</div>
+          <pre class="code-block"><code>import { config as loadDotenv } from 'dotenv';
+import { z } from 'zod';
+
+loadDotenv();
+
+const configSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().positive().default(3000),
+  HOST: z.string().default('0.0.0.0'),
+  DATABASE_URL: z.string().url(),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(25_000),
+  IDEMPOTENCY_TTL_HOURS: z.coerce.number().int().positive().default(24),
+  IDEMPOTENCY_CLEANUP_INTERVAL_MS: z.coerce.number().int().nonnegative().default(3_600_000),
+  BALANCE_VERIFY_INTERVAL_MS: z.coerce.number().int().nonnegative().default(0),
+});
+
+export type AppConfig = {
+  nodeEnv: 'development' | 'test' | 'production';
+  port: number;
+  host: string;
+  databaseUrl: string;
+  logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
+  shutdownTimeoutMs: number;
+  idempotencyTtlHours: number;
+  idempotencyCleanupIntervalMs: number;
+  balanceVerifyIntervalMs: number;
+};
+
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  const parsed = configSchema.safeParse(env);
+  if (!parsed.success) {
+    const message = parsed.error.issues.map((i) =&gt; `${i.path.join('.')}: ${i.message}`).join('; ');
+    throw new Error(`Invalid configuration: ${message}`);
+  }
+
+  const e = parsed.data;
+  return {
+    nodeEnv: e.NODE_ENV,
+    port: e.PORT,
+    host: e.HOST,
+    databaseUrl: e.DATABASE_URL,
+    logLevel: e.LOG_LEVEL,
+    shutdownTimeoutMs: e.SHUTDOWN_TIMEOUT_MS,
+    idempotencyTtlHours: e.IDEMPOTENCY_TTL_HOURS,
+    idempotencyCleanupIntervalMs: e.IDEMPOTENCY_CLEANUP_INTERVAL_MS,
+    balanceVerifyIntervalMs: e.BALANCE_VERIFY_INTERVAL_MS,
+  };
+}
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="database-layer">
+        <div class="section-banner" style="--accent:#0f4c5c">
+          <span class="section-icon">🗄️</span>
+          <h2>Database Layer</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/db/schema.ts</span>
+            <span class="file-meta">120 lines · Drizzle table definitions</span>
+          </header>
+          <div class="file-purpose">Maps Postgres enums and tables: accounts, account_balances, transactions, entries (append-only journal), idempotency_keys. Uses bigint mode for money columns and documents relations for query ergonomics.</div>
+          <pre class="code-block"><code>import { relations, sql } from 'drizzle-orm';
+import {
+  bigint,
+  bigserial,
+  char,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+
+export const accountTypeEnum = pgEnum('account_type', [
+  'ASSET',
+  'LIABILITY',
+  'EQUITY',
+  'INCOME',
+  'EXPENSE',
+]);
+
+export const accountStatusEnum = pgEnum('account_status', ['ACTIVE', 'FROZEN', 'CLOSED']);
+
+export const txnStatusEnum = pgEnum('txn_status', ['POSTED', 'REVERSED']);
+
+export const entryDirectionEnum = pgEnum('entry_direction', ['DEBIT', 'CREDIT']);
+
+export const accounts = pgTable('accounts', {
+  id: uuid('id').primaryKey(),
+  name: text('name').notNull(),
+  type: accountTypeEnum('type').notNull(),
+  currency: char('currency', { length: 3 }).notNull(),
+  status: accountStatusEnum('status').notNull().default('ACTIVE'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const accountBalances = pgTable('account_balances', {
+  accountId: uuid('account_id')
+    .primaryKey()
+    .references(() =&gt; accounts.id),
+  balance: bigint('balance', { mode: 'bigint' })
+    .notNull()
+    .default(sql`0`),
+  version: bigint('version', { mode: 'bigint' })
+    .notNull()
+    .default(sql`0`),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const transactions = pgTable('transactions', {
+  id: uuid('id').primaryKey(),
+  status: txnStatusEnum('status').notNull().default('POSTED'),
+  description: text('description'),
+  externalRef: text('external_ref'),
+  postedAt: timestamp('posted_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const entries = pgTable(
+  'entries',
+  {
+    id: bigserial('id', { mode: 'bigint' }).primaryKey(),
+    transactionId: uuid('transaction_id')
+      .notNull()
+      .references(() =&gt; transactions.id),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() =&gt; accounts.id),
+    direction: entryDirectionEnum('direction').notNull(),
+    amount: bigint('amount', { mode: 'bigint' }).notNull(),
+    currency: char('currency', { length: 3 }).notNull(),
+    postedAt: timestamp('posted_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) =&gt; [
+    index('entries_account_posted_idx').on(table.accountId, table.postedAt),
+    index('entries_txn_idx').on(table.transactionId),
+  ],
+);
+
+export const idempotencyKeys = pgTable(
+  'idempotency_keys',
+  {
+    key: text('key').primaryKey(),
+    requestHash: text('request_hash').notNull(),
+    responseStatus: integer('response_status').notNull(),
+    responseBody: jsonb('response_body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) =&gt; [index('idempotency_keys_created_at_idx').on(table.createdAt)],
+);
+
+export const accountsRelations = relations(accounts, ({ one }) =&gt; ({
+  balance: one(accountBalances, {
+    fields: [accounts.id],
+    references: [accountBalances.accountId],
+  }),
+}));
+
+export const transactionsRelations = relations(transactions, ({ many }) =&gt; ({
+  entries: many(entries),
+}));
+
+export const entriesRelations = relations(entries, ({ one }) =&gt; ({
+  transaction: one(transactions, {
+    fields: [entries.transactionId],
+    references: [transactions.id],
+  }),
+  account: one(accounts, {
+    fields: [entries.accountId],
+    references: [accounts.id],
+  }),
+}));
+
+export type AccountRow = typeof accounts.$inferSelect;
+export type AccountBalanceRow = typeof accountBalances.$inferSelect;
+export type TransactionRow = typeof transactions.$inferSelect;
+export type EntryRow = typeof entries.$inferSelect;
+export type IdempotencyKeyRow = typeof idempotencyKeys.$inferSelect;
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/db/client.ts</span>
+            <span class="file-meta">31 lines · Connection pool + Drizzle</span>
+          </header>
+          <div class="file-purpose">Creates pg.Pool and Drizzle Database instance. Exposes checkDbConnectivity() for /readyz readiness probes.</div>
+          <pre class="code-block"><code>import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
+import type { AppConfig } from '../config.js';
+import * as schema from './schema.js';
+
+export type Database = NodePgDatabase&lt;typeof schema&gt;;
+
+export type DbContext = {
+  db: Database;
+  pool: pg.Pool;
+};
+
+export function createDbContext(config: AppConfig): DbContext {
+  const pool = new pg.Pool({
+    connectionString: config.databaseUrl,
+    max: 20,
+  });
+  const db = drizzle(pool, { schema });
+  return { db, pool };
+}
+
+export async function checkDbConnectivity(pool: pg.Pool): Promise&lt;boolean&gt; {
+  const client = await pool.connect();
+  try {
+    await client.query('SELECT 1');
+    return true;
+  } finally {
+    client.release();
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/db/migrate.ts</span>
+            <span class="file-meta">71 lines · Programmatic migrations</span>
+          </header>
+          <div class="file-purpose">Applies ordered SQL files from migrations/, tracking applied files in schema_migrations. Splits on drizzle-kit statement breakpoints so triggers run as separate statements.</div>
+          <pre class="code-block"><code>import { readFileSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import pg from 'pg';
+import { loadConfig } from '../config.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const migrationsDir = join(__dirname, '../../migrations');
+
+async function migrate(): Promise&lt;void&gt; {
+  const config = loadConfig();
+  const pool = new pg.Pool({ connectionString: config.databaseUrl });
+  const client = await pool.connect();
+
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        filename TEXT PRIMARY KEY,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )
+    `);
+
+    const files = readdirSync(migrationsDir)
+      .filter((f) =&gt; f.endsWith('.sql'))
+      .sort();
+
+    for (const file of files) {
+      const { rows } = await client.query&lt;{ filename: string }&gt;(
+        'SELECT filename FROM schema_migrations WHERE filename = $1',
+        [file],
+      );
+      if (rows.length &gt; 0) {
+        console.log(`skip ${file}`);
+        continue;
+      }
+
+      const raw = readFileSync(join(migrationsDir, file), 'utf8');
+      const statements = raw
+        .split('--&gt; statement-breakpoint')
+        .map((s) =&gt; s.trim())
+        .filter((s) =&gt; s.length &gt; 0);
+
+      await client.query('BEGIN');
+      try {
+        for (const statement of statements) {
+          await client.query(statement);
+        }
+        await client.query('INSERT INTO schema_migrations (filename) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+        console.log(`applied ${file}`);
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      }
+    }
+  } finally {
+    client.release();
+    await pool.end();
+  }
+}
+
+const isMain = process.argv[1]?.includes('migrate');
+if (isMain) {
+  migrate().catch((err: unknown) =&gt; {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+export { migrate };
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">migrations/0001_init.sql</span>
+            <span class="file-meta">89 lines · Authoritative SQL + trigger</span>
+          </header>
+          <div class="file-purpose">Non-negotiable schema plus assert_double_entry_balanced() deferrable constraint trigger — the primary correctness guarantee that debits equal credits per currency at COMMIT.</div>
+          <pre class="code-block"><code>CREATE TYPE &quot;public&quot;.&quot;account_type&quot; AS ENUM('ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE');--&gt; statement-breakpoint
+CREATE TYPE &quot;public&quot;.&quot;account_status&quot; AS ENUM('ACTIVE', 'FROZEN', 'CLOSED');--&gt; statement-breakpoint
+CREATE TYPE &quot;public&quot;.&quot;txn_status&quot; AS ENUM('POSTED', 'REVERSED');--&gt; statement-breakpoint
+CREATE TYPE &quot;public&quot;.&quot;entry_direction&quot; AS ENUM('DEBIT', 'CREDIT');--&gt; statement-breakpoint
+CREATE TABLE &quot;accounts&quot; (
+	&quot;id&quot; uuid PRIMARY KEY NOT NULL,
+	&quot;name&quot; text NOT NULL,
+	&quot;type&quot; &quot;account_type&quot; NOT NULL,
+	&quot;currency&quot; char(3) NOT NULL,
+	&quot;status&quot; &quot;account_status&quot; DEFAULT 'ACTIVE' NOT NULL,
+	&quot;created_at&quot; timestamp with time zone DEFAULT now() NOT NULL
+);
+--&gt; statement-breakpoint
+CREATE TABLE &quot;account_balances&quot; (
+	&quot;account_id&quot; uuid PRIMARY KEY NOT NULL,
+	&quot;balance&quot; bigint DEFAULT 0 NOT NULL,
+	&quot;version&quot; bigint DEFAULT 0 NOT NULL,
+	&quot;updated_at&quot; timestamp with time zone DEFAULT now() NOT NULL
+);
+--&gt; statement-breakpoint
+CREATE TABLE &quot;transactions&quot; (
+	&quot;id&quot; uuid PRIMARY KEY NOT NULL,
+	&quot;status&quot; &quot;txn_status&quot; DEFAULT 'POSTED' NOT NULL,
+	&quot;description&quot; text,
+	&quot;external_ref&quot; text,
+	&quot;posted_at&quot; timestamp with time zone DEFAULT now() NOT NULL
+);
+--&gt; statement-breakpoint
+CREATE TABLE &quot;entries&quot; (
+	&quot;id&quot; bigserial PRIMARY KEY NOT NULL,
+	&quot;transaction_id&quot; uuid NOT NULL,
+	&quot;account_id&quot; uuid NOT NULL,
+	&quot;direction&quot; &quot;entry_direction&quot; NOT NULL,
+	&quot;amount&quot; bigint NOT NULL,
+	&quot;currency&quot; char(3) NOT NULL,
+	&quot;posted_at&quot; timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT &quot;entries_amount_positive&quot; CHECK (&quot;amount&quot; &gt; 0)
+);
+--&gt; statement-breakpoint
+CREATE TABLE &quot;idempotency_keys&quot; (
+	&quot;key&quot; text PRIMARY KEY NOT NULL,
+	&quot;request_hash&quot; text NOT NULL,
+	&quot;response_status&quot; integer NOT NULL,
+	&quot;response_body&quot; jsonb NOT NULL,
+	&quot;created_at&quot; timestamp with time zone DEFAULT now() NOT NULL
+);
+--&gt; statement-breakpoint
+ALTER TABLE &quot;account_balances&quot; ADD CONSTRAINT &quot;account_balances_account_id_accounts_id_fk&quot; FOREIGN KEY (&quot;account_id&quot;) REFERENCES &quot;public&quot;.&quot;accounts&quot;(&quot;id&quot;) ON DELETE no action ON UPDATE no action;--&gt; statement-breakpoint
+ALTER TABLE &quot;entries&quot; ADD CONSTRAINT &quot;entries_transaction_id_transactions_id_fk&quot; FOREIGN KEY (&quot;transaction_id&quot;) REFERENCES &quot;public&quot;.&quot;transactions&quot;(&quot;id&quot;) ON DELETE no action ON UPDATE no action;--&gt; statement-breakpoint
+ALTER TABLE &quot;entries&quot; ADD CONSTRAINT &quot;entries_account_id_accounts_id_fk&quot; FOREIGN KEY (&quot;account_id&quot;) REFERENCES &quot;public&quot;.&quot;accounts&quot;(&quot;id&quot;) ON DELETE no action ON UPDATE no action;--&gt; statement-breakpoint
+CREATE INDEX &quot;entries_account_posted_idx&quot; ON &quot;entries&quot; USING btree (&quot;account_id&quot;,&quot;posted_at&quot;);--&gt; statement-breakpoint
+CREATE INDEX &quot;entries_txn_idx&quot; ON &quot;entries&quot; USING btree (&quot;transaction_id&quot;);--&gt; statement-breakpoint
+CREATE INDEX &quot;idempotency_keys_created_at_idx&quot; ON &quot;idempotency_keys&quot; USING btree (&quot;created_at&quot;);
+
+--&gt; statement-breakpoint
+CREATE OR REPLACE FUNCTION assert_double_entry_balanced()
+RETURNS TRIGGER AS $$
+DECLARE
+  imbalance RECORD;
+BEGIN
+  FOR imbalance IN
+    SELECT transaction_id, currency,
+           SUM(CASE WHEN direction = 'DEBIT'  THEN amount ELSE 0 END) AS debits,
+           SUM(CASE WHEN direction = 'CREDIT' THEN amount ELSE 0 END) AS credits
+    FROM entries
+    WHERE transaction_id IN (
+      SELECT DISTINCT transaction_id FROM new_entries
+    )
+    GROUP BY transaction_id, currency
+  LOOP
+    IF imbalance.debits &lt;&gt; imbalance.credits THEN
+      RAISE EXCEPTION
+        'Double-entry violation: transaction % currency % debits=% credits=%',
+        imbalance.transaction_id, imbalance.currency,
+        imbalance.debits, imbalance.credits;
+    END IF;
+  END LOOP;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+--&gt; statement-breakpoint
+CREATE CONSTRAINT TRIGGER entries_balanced_check
+AFTER INSERT ON entries
+DEFERRABLE INITIALLY DEFERRED
+REFERENCING NEW TABLE AS new_entries
+FOR EACH STATEMENT
+EXECUTE FUNCTION assert_double_entry_balanced();
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="domain-layer">
+        <div class="section-banner" style="--accent:#5c4033">
+          <span class="section-icon">🏛️</span>
+          <h2>Domain Layer</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/domain/money.ts</span>
+            <span class="file-meta">64 lines · Currency &amp; amount primitives</span>
+          </header>
+          <div class="file-purpose">Supported ISO currencies (USD, EUR, GBP, AED), parse/format of minor-unit bigint amounts from wire strings, and safe add/subtract helpers. No floats anywhere.</div>
+          <pre class="code-block"><code>import { InvalidAmountError, UnsupportedCurrencyError } from './errors.js';
+
+export const CURRENCIES = {
+  USD: { code: 'USD', minorUnits: 2 },
+  EUR: { code: 'EUR', minorUnits: 2 },
+  GBP: { code: 'GBP', minorUnits: 2 },
+  AED: { code: 'AED', minorUnits: 2 },
+} as const;
+
+export type CurrencyCode = keyof typeof CURRENCIES;
+
+export function isSupportedCurrency(code: string): code is CurrencyCode {
+  return code in CURRENCIES;
+}
+
+export function assertSupportedCurrency(code: string): CurrencyCode {
+  if (!isSupportedCurrency(code)) {
+    throw new UnsupportedCurrencyError(code);
+  }
+  return code;
+}
+
+/** Parse wire-format minor-unit amount (integer string) to bigint. */
+export function parseAmount(value: string): bigint {
+  if (!/^-?\d+$/.test(value)) {
+    throw new InvalidAmountError(`Amount must be an integer string: ${value}`);
+  }
+  try {
+    const amount = BigInt(value);
+    if (amount &lt;= 0n) {
+      throw new InvalidAmountError('Amount must be positive');
+    }
+    return amount;
+  } catch {
+    throw new InvalidAmountError(`Amount out of range: ${value}`);
+  }
+}
+
+export function formatAmount(amount: bigint): string {
+  return amount.toString();
+}
+
+export function addAmounts(a: bigint, b: bigint): bigint {
+  const result = a + b;
+  if (result &lt; a &amp;&amp; b &gt; 0n) {
+    throw new InvalidAmountError('Amount overflow on addition');
+  }
+  if (result &gt; a &amp;&amp; b &lt; 0n) {
+    throw new InvalidAmountError('Amount underflow on addition');
+  }
+  return result;
+}
+
+export function subtractAmounts(a: bigint, b: bigint): bigint {
+  const result = a - b;
+  if (result &gt; a &amp;&amp; b &gt; 0n) {
+    throw new InvalidAmountError('Amount underflow on subtraction');
+  }
+  if (result &lt; a &amp;&amp; b &lt; 0n) {
+    throw new InvalidAmountError('Amount overflow on subtraction');
+  }
+  return result;
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/domain/account.ts</span>
+            <span class="file-meta">67 lines · Account model &amp; balance math</span>
+          </header>
+          <div class="file-purpose">Normal-balance rules (DEBIT-normal for ASSET/EXPENSE, CREDIT-normal otherwise), journal balance derivation, and applying entries to materialised balances.</div>
+          <pre class="code-block"><code>import type { AccountRow } from '../db/schema.js';
+import { addAmounts, subtractAmounts } from './money.js';
+
+export type AccountType = AccountRow['type'];
+export type AccountStatus = AccountRow['status'];
+export type EntryDirection = 'DEBIT' | 'CREDIT';
+
+export type Account = {
+  id: string;
+  name: string;
+  type: AccountType;
+  currency: string;
+  status: AccountStatus;
+  createdAt: Date;
+};
+
+export function mapAccountRow(row: AccountRow): Account {
+  return {
+    id: row.id,
+    name: row.name,
+    type: row.type,
+    currency: row.currency.trim(),
+    status: row.status,
+    createdAt: row.createdAt,
+  };
+}
+
+/** Normal-balance side: DEBIT for ASSET/EXPENSE, CREDIT for LIABILITY/EQUITY/INCOME. */
+export function normalBalanceSide(type: AccountType): EntryDirection {
+  return type === 'ASSET' || type === 'EXPENSE' ? 'DEBIT' : 'CREDIT';
+}
+
+/**
+ * Signed balance from journal aggregates (debits and credits in minor units).
+ */
+export function balanceFromJournal(type: AccountType, debits: bigint, credits: bigint): bigint {
+  if (normalBalanceSide(type) === 'DEBIT') {
+    return subtractAmounts(debits, credits);
+  }
+  return subtractAmounts(credits, debits);
+}
+
+/**
+ * Apply an entry to a materialised balance using account normal-balance rules.
+ */
+export function applyEntryToBalance(
+  type: AccountType,
+  currentBalance: bigint,
+  direction: EntryDirection,
+  amount: bigint,
+): bigint {
+  const isDebitNormal = normalBalanceSide(type) === 'DEBIT';
+  const increasesBalance =
+    (direction === 'DEBIT' &amp;&amp; isDebitNormal) || (direction === 'CREDIT' &amp;&amp; !isDebitNormal);
+
+  if (increasesBalance) {
+    return addAmounts(currentBalance, amount);
+  }
+  return subtractAmounts(currentBalance, amount);
+}
+
+export function assertAccountActive(account: Account): void {
+  if (account.status !== 'ACTIVE') {
+    throw new Error(`Account ${account.id} is not active`);
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/domain/transaction.ts</span>
+            <span class="file-meta">41 lines · Posting validation</span>
+          </header>
+          <div class="file-purpose">App-side per-currency double-entry check before INSERT; complements the database trigger with friendlier 422 errors.</div>
+          <pre class="code-block"><code>import type { EntryDirection } from './account.js';
+import { UnbalancedTransactionError } from './errors.js';
+import { addAmounts, type CurrencyCode } from './money.js';
+
+export type PostingEntryInput = {
+  accountId: string;
+  direction: EntryDirection;
+  amount: bigint;
+  currency: CurrencyCode;
+};
+
+export type PostTransactionInput = {
+  description?: string | undefined;
+  externalRef?: string | undefined;
+  entries: PostingEntryInput[];
+};
+
+/**
+ * App-side double-entry check per currency before hitting the deferred DB trigger.
+ */
+export function assertTransactionBalanced(entries: PostingEntryInput[]): void {
+  const totals = new Map&lt;string, { debits: bigint; credits: bigint }&gt;();
+
+  for (const entry of entries) {
+    const key = entry.currency;
+    const bucket = totals.get(key) ?? { debits: 0n, credits: 0n };
+    if (entry.direction === 'DEBIT') {
+      bucket.debits = addAmounts(bucket.debits, entry.amount);
+    } else {
+      bucket.credits = addAmounts(bucket.credits, entry.amount);
+    }
+    totals.set(key, bucket);
+  }
+
+  for (const [currency, { debits, credits }] of totals) {
+    if (debits !== credits) {
+      throw new UnbalancedTransactionError(currency);
+    }
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/domain/errors.ts</span>
+            <span class="file-meta">91 lines · Domain error hierarchy</span>
+          </header>
+          <div class="file-purpose">Typed errors (AccountNotFound, UnbalancedTransaction, IdempotencyConflict, etc.) with stable codes. Only the HTTP error handler maps these to RFC 7807 problem+json.</div>
+          <pre class="code-block"><code>export abstract class DomainError extends Error {
+  abstract readonly code: string;
+
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export class AccountNotFoundError extends DomainError {
+  readonly code = 'account_not_found';
+
+  constructor(accountId: string) {
+    super(`Account not found: ${accountId}`);
+  }
+}
+
+export class AccountFrozenError extends DomainError {
+  readonly code = 'account_frozen';
+
+  constructor(accountId: string) {
+    super(`Account is frozen: ${accountId}`);
+  }
+}
+
+export class UnbalancedTransactionError extends DomainError {
+  readonly code = 'unbalanced_transaction';
+
+  constructor(currency: string) {
+    super(`Transaction is unbalanced for currency ${currency}`);
+  }
+}
+
+export class CurrencyMismatchError extends DomainError {
+  readonly code = 'currency_mismatch';
+
+  constructor(accountId: string, expected: string, actual: string) {
+    super(
+      `Currency mismatch for account ${accountId}: account currency ${expected}, entry currency ${actual}`,
+    );
+  }
+}
+
+export class UnsupportedCurrencyError extends DomainError {
+  readonly code = 'unsupported_currency';
+
+  constructor(currency: string) {
+    super(`Unsupported currency: ${currency}`);
+  }
+}
+
+export class IdempotencyConflictError extends DomainError {
+  readonly code = 'idempotency_conflict';
+
+  constructor() {
+    super('Idempotency key was used with a different request body');
+  }
+}
+
+export class IdempotencyKeyRequiredError extends DomainError {
+  readonly code = 'idempotency_key_required';
+
+  constructor() {
+    super('Idempotency-Key header is required for POST requests');
+  }
+}
+
+export class TransactionNotFoundError extends DomainError {
+  readonly code = 'transaction_not_found';
+
+  constructor(transactionId: string) {
+    super(`Transaction not found: ${transactionId}`);
+  }
+}
+
+export class DoubleEntryViolationError extends DomainError {
+  readonly code = 'double_entry_violation';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class InvalidAmountError extends DomainError {
+  readonly code = 'invalid_amount';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="repositories">
+        <div class="section-banner" style="--accent:#4a4e69">
+          <span class="section-icon">📦</span>
+          <h2>Repositories</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/repositories/accounts.repo.ts</span>
+            <span class="file-meta">84 lines · Account &amp; balance persistence</span>
+          </header>
+          <div class="file-purpose">Insert/find accounts, SELECT FOR UPDATE in sorted order (deadlock prevention), optimistic versioned balance updates.</div>
+          <pre class="code-block"><code>import { eq, inArray, sql } from 'drizzle-orm';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type * as schema from '../db/schema.js';
+import { accountBalances, accounts } from '../db/schema.js';
+
+export type DbExecutor = NodePgDatabase&lt;typeof schema&gt;;
+
+export class AccountsRepository {
+  async insertAccount(
+    db: DbExecutor,
+    row: typeof accounts.$inferInsert,
+  ): Promise&lt;typeof accounts.$inferSelect&gt; {
+    const [created] = await db.insert(accounts).values(row).returning();
+    if (!created) {
+      throw new Error('Failed to insert account');
+    }
+    return created;
+  }
+
+  async insertBalance(db: DbExecutor, row: typeof accountBalances.$inferInsert): Promise&lt;void&gt; {
+    await db.insert(accountBalances).values(row);
+  }
+
+  async findById(
+    db: DbExecutor,
+    accountId: string,
+  ): Promise&lt;typeof accounts.$inferSelect | undefined&gt; {
+    const [row] = await db.select().from(accounts).where(eq(accounts.id, accountId)).limit(1);
+    return row;
+  }
+
+  async findByIdsForUpdate(
+    db: DbExecutor,
+    accountIds: string[],
+  ): Promise&lt;(typeof accounts.$inferSelect)[]&gt; {
+    if (accountIds.length === 0) {
+      return [];
+    }
+    return db
+      .select()
+      .from(accounts)
+      .where(inArray(accounts.id, accountIds))
+      .orderBy(accounts.id)
+      .for('update');
+  }
+
+  async getBalance(
+    db: DbExecutor,
+    accountId: string,
+  ): Promise&lt;typeof accountBalances.$inferSelect | undefined&gt; {
+    const [row] = await db
+      .select()
+      .from(accountBalances)
+      .where(eq(accountBalances.accountId, accountId))
+      .limit(1);
+    return row;
+  }
+
+  async updateBalance(
+    db: DbExecutor,
+    accountId: string,
+    balance: bigint,
+    expectedVersion: bigint,
+  ): Promise&lt;boolean&gt; {
+    const result = await db
+      .update(accountBalances)
+      .set({
+        balance,
+        version: expectedVersion + 1n,
+        updatedAt: sql`now()`,
+      })
+      .where(
+        sql`${accountBalances.accountId} = ${accountId} AND ${accountBalances.version} = ${expectedVersion}`,
+      )
+      .returning();
+    return result.length &gt; 0;
+  }
+
+  async listAllAccountIds(db: DbExecutor): Promise&lt;string[]&gt; {
+    const rows = await db.select({ id: accounts.id }).from(accounts);
+    return rows.map((r) =&gt; r.id);
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/repositories/entries.repo.ts</span>
+            <span class="file-meta">72 lines · Journal access</span>
+          </header>
+          <div class="file-purpose">Append-only entry inserts, statement pagination, and journal SUM aggregates for verification. No UPDATE/DELETE on entries.</div>
+          <pre class="code-block"><code>import { and, desc, eq, sql } from 'drizzle-orm';
+import { entries } from '../db/schema.js';
+import type { DbExecutor } from './accounts.repo.js';
+
+export class EntriesRepository {
+  async insertMany(db: DbExecutor, rows: (typeof entries.$inferInsert)[]): Promise&lt;void&gt; {
+    if (rows.length &gt; 0) {
+      await db.insert(entries).values(rows);
+    }
+  }
+
+  async findByTransactionId(
+    db: DbExecutor,
+    transactionId: string,
+  ): Promise&lt;(typeof entries.$inferSelect)[]&gt; {
+    return db
+      .select()
+      .from(entries)
+      .where(eq(entries.transactionId, transactionId))
+      .orderBy(entries.id);
+  }
+
+  async listByAccount(
+    db: DbExecutor,
+    accountId: string,
+    limit: number,
+    cursor?: { postedAt: Date; id: bigint },
+  ): Promise&lt;(typeof entries.$inferSelect)[]&gt; {
+    const conditions = [eq(entries.accountId, accountId)];
+    if (cursor) {
+      conditions.push(
+        sql`(${entries.postedAt}, ${entries.id}) &lt; (${cursor.postedAt}, ${cursor.id})`,
+      );
+    }
+
+    return db
+      .select()
+      .from(entries)
+      .where(and(...conditions))
+      .orderBy(desc(entries.postedAt), desc(entries.id))
+      .limit(limit);
+  }
+
+  async sumJournalByAccount(
+    db: DbExecutor,
+    accountId: string,
+  ): Promise&lt;{ debits: bigint; credits: bigint }&gt; {
+    const [row] = await db
+      .select({
+        debits: sql&lt;bigint&gt;`COALESCE(SUM(CASE WHEN ${entries.direction} = 'DEBIT' THEN ${entries.amount} ELSE 0 END), 0)`,
+        credits: sql&lt;bigint&gt;`COALESCE(SUM(CASE WHEN ${entries.direction} = 'CREDIT' THEN ${entries.amount} ELSE 0 END), 0)`,
+      })
+      .from(entries)
+      .where(eq(entries.accountId, accountId));
+
+    return {
+      debits: coerceBigInt(row?.debits),
+      credits: coerceBigInt(row?.credits),
+    };
+  }
+}
+
+function coerceBigInt(value: bigint | string | number | null | undefined): bigint {
+  if (value === null || value === undefined) {
+    return 0n;
+  }
+  if (typeof value === 'bigint') {
+    return value;
+  }
+  return BigInt(value);
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/repositories/transactions.repo.ts</span>
+            <span class="file-meta">29 lines · Transaction headers</span>
+          </header>
+          <div class="file-purpose">Insert and fetch logical transaction rows grouping journal lines.</div>
+          <pre class="code-block"><code>import { eq } from 'drizzle-orm';
+import { transactions } from '../db/schema.js';
+import type { DbExecutor } from './accounts.repo.js';
+
+export class TransactionsRepository {
+  async insert(
+    db: DbExecutor,
+    row: typeof transactions.$inferInsert,
+  ): Promise&lt;typeof transactions.$inferSelect&gt; {
+    const [created] = await db.insert(transactions).values(row).returning();
+    if (!created) {
+      throw new Error('Failed to insert transaction');
+    }
+    return created;
+  }
+
+  async findById(
+    db: DbExecutor,
+    transactionId: string,
+  ): Promise&lt;typeof transactions.$inferSelect | undefined&gt; {
+    const [row] = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.id, transactionId))
+      .limit(1);
+    return row;
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/repositories/idempotency.repo.ts</span>
+            <span class="file-meta">55 lines · Idempotency cache storage</span>
+          </header>
+          <div class="file-purpose">Lookup/insert cached responses by client key; TTL cleanup by created_at.</div>
+          <pre class="code-block"><code>import { eq, lt } from 'drizzle-orm';
+import { idempotencyKeys } from '../db/schema.js';
+import type { DbExecutor } from './accounts.repo.js';
+
+export type IdempotencyRecord = {
+  key: string;
+  requestHash: string;
+  responseStatus: number;
+  responseBody: unknown;
+};
+
+export class IdempotencyRepository {
+  async findByKey(db: DbExecutor, key: string): Promise&lt;IdempotencyRecord | undefined&gt; {
+    const [row] = await db
+      .select()
+      .from(idempotencyKeys)
+      .where(eq(idempotencyKeys.key, key))
+      .limit(1);
+    if (!row) {
+      return undefined;
+    }
+    return {
+      key: row.key,
+      requestHash: row.requestHash,
+      responseStatus: row.responseStatus,
+      responseBody: row.responseBody,
+    };
+  }
+
+  async insert(
+    db: DbExecutor,
+    record: {
+      key: string;
+      requestHash: string;
+      responseStatus: number;
+      responseBody: unknown;
+    },
+  ): Promise&lt;void&gt; {
+    await db.insert(idempotencyKeys).values({
+      key: record.key,
+      requestHash: record.requestHash,
+      responseStatus: record.responseStatus,
+      responseBody: record.responseBody,
+    });
+  }
+
+  async deleteOlderThan(db: DbExecutor, cutoff: Date): Promise&lt;number&gt; {
+    const result = await db
+      .delete(idempotencyKeys)
+      .where(lt(idempotencyKeys.createdAt, cutoff))
+      .returning({ key: idempotencyKeys.key });
+    return result.length;
+  }
+}
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="services">
+        <div class="section-banner" style="--accent:#9a031e">
+          <span class="section-icon">⚡</span>
+          <h2>Services</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/services/accounts.service.ts</span>
+            <span class="file-meta">118 lines · Account lifecycle</span>
+          </header>
+          <div class="file-purpose">createAccount in a DB transaction (account + zero balance row + optional idempotency record). getBalance returns materialised and journal balances for audit.</div>
+          <pre class="code-block"><code>import { v7 as uuidv7 } from 'uuid';
+import type { Database } from '../db/client.js';
+import { balanceFromJournal, mapAccountRow, type Account } from '../domain/account.js';
+import { assertSupportedCurrency } from '../domain/money.js';
+import { AccountNotFoundError } from '../domain/errors.js';
+import { AccountsRepository } from '../repositories/accounts.repo.js';
+import { EntriesRepository } from '../repositories/entries.repo.js';
+import type { IdempotencyContext } from './idempotency.service.js';
+import { IdempotencyService } from './idempotency.service.js';
+
+export type CreateAccountInput = {
+  name: string;
+  type: Account['type'];
+  currency: string;
+};
+
+export type AccountResponse = {
+  id: string;
+  name: string;
+  type: Account['type'];
+  currency: string;
+  status: Account['status'];
+  created_at: string;
+};
+
+export type BalanceResponse = {
+  account_id: string;
+  currency: string;
+  balance: string;
+  journal_balance: string;
+  as_of: string;
+};
+
+export class AccountsService {
+  constructor(
+    private readonly db: Database,
+    private readonly accountsRepo: AccountsRepository,
+    private readonly entriesRepo: EntriesRepository,
+    private readonly idempotencyService: IdempotencyService,
+  ) {}
+
+  toAccountResponse(account: Account): AccountResponse {
+    return {
+      id: account.id,
+      name: account.name,
+      type: account.type,
+      currency: account.currency,
+      status: account.status,
+      created_at: account.createdAt.toISOString(),
+    };
+  }
+
+  async createAccount(
+    input: CreateAccountInput,
+    idempotency?: IdempotencyContext,
+    responseForCache?: AccountResponse,
+  ): Promise&lt;AccountResponse&gt; {
+    const currency = assertSupportedCurrency(input.currency);
+    const accountId = uuidv7();
+
+    return this.db.transaction(async (tx) =&gt; {
+      const row = await this.accountsRepo.insertAccount(tx, {
+        id: accountId,
+        name: input.name,
+        type: input.type,
+        currency,
+        status: 'ACTIVE',
+      });
+      await this.accountsRepo.insertBalance(tx, {
+        accountId,
+        balance: 0n,
+        version: 0n,
+      });
+
+      const response = this.toAccountResponse(mapAccountRow(row));
+
+      if (idempotency) {
+        await this.idempotencyService.persist(tx, idempotency, 201, responseForCache ?? response);
+      }
+
+      return response;
+    });
+  }
+
+  async getAccount(accountId: string): Promise&lt;Account&gt; {
+    const row = await this.accountsRepo.findById(this.db, accountId);
+    if (!row) {
+      throw new AccountNotFoundError(accountId);
+    }
+    return mapAccountRow(row);
+  }
+
+  async getBalance(accountId: string): Promise&lt;BalanceResponse&gt; {
+    const account = await this.getAccount(accountId);
+    const materialised = await this.accountsRepo.getBalance(this.db, accountId);
+    if (!materialised) {
+      throw new AccountNotFoundError(accountId);
+    }
+
+    const { debits, credits } = await this.entriesRepo.sumJournalByAccount(this.db, accountId);
+    const journalBalance = balanceFromJournal(account.type, debits, credits);
+
+    return {
+      account_id: accountId,
+      currency: account.currency,
+      balance: materialised.balance.toString(),
+      journal_balance: journalBalance.toString(),
+      as_of: materialised.updatedAt.toISOString(),
+    };
+  }
+
+  /** Used by balance verification job — compares materialised vs journal. */
+  async computeJournalBalance(accountId: string, type: Account['type']): Promise&lt;bigint&gt; {
+    const { debits, credits } = await this.entriesRepo.sumJournalByAccount(this.db, accountId);
+    return balanceFromJournal(type, debits, credits);
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/services/transactions.service.ts</span>
+            <span class="file-meta">209 lines · Double-entry posting (core)</span>
+          </header>
+          <div class="file-purpose">Single Postgres transaction: lock accounts, validate ACTIVE/currency, insert transaction + entries, update materialised balances, persist idempotency cache, increment ledger metrics. COMMIT fires deferred balance trigger.</div>
+          <pre class="code-block"><code>import { v7 as uuidv7 } from 'uuid';
+import type { Database } from '../db/client.js';
+import { applyEntryToBalance, mapAccountRow, type EntryDirection } from '../domain/account.js';
+import {
+  AccountFrozenError,
+  AccountNotFoundError,
+  CurrencyMismatchError,
+  TransactionNotFoundError,
+} from '../domain/errors.js';
+import { assertSupportedCurrency, formatAmount, parseAmount } from '../domain/money.js';
+import {
+  assertTransactionBalanced,
+  type PostingEntryInput,
+  type PostTransactionInput,
+} from '../domain/transaction.js';
+import { AccountsRepository } from '../repositories/accounts.repo.js';
+import { EntriesRepository } from '../repositories/entries.repo.js';
+import { TransactionsRepository } from '../repositories/transactions.repo.js';
+import {
+  ledgerEntriesPostedTotal,
+  ledgerTransactionsPostedTotal,
+} from '../observability/metrics.js';
+import type { IdempotencyContext } from './idempotency.service.js';
+import { IdempotencyService } from './idempotency.service.js';
+
+export type EntryResponse = {
+  id: string;
+  transaction_id: string;
+  account_id: string;
+  direction: EntryDirection;
+  amount: string;
+  currency: string;
+  posted_at: string;
+};
+
+export type TransactionResponse = {
+  id: string;
+  status: 'POSTED' | 'REVERSED';
+  description: string | null;
+  external_ref: string | null;
+  posted_at: string;
+  entries: EntryResponse[];
+};
+
+export class TransactionsService {
+  constructor(
+    private readonly db: Database,
+    private readonly accountsRepo: AccountsRepository,
+    private readonly entriesRepo: EntriesRepository,
+    private readonly transactionsRepo: TransactionsRepository,
+    private readonly idempotencyService: IdempotencyService,
+  ) {}
+
+  async postTransaction(
+    input: PostTransactionInput,
+    idempotency?: IdempotencyContext,
+    responseForCache?: TransactionResponse,
+  ): Promise&lt;TransactionResponse&gt; {
+    assertTransactionBalanced(input.entries);
+
+    const distinctAccountIds = [...new Set(input.entries.map((e) =&gt; e.accountId))].sort();
+
+    const result = await this.db.transaction(async (tx) =&gt; {
+      const lockedRows = await this.accountsRepo.findByIdsForUpdate(tx, distinctAccountIds);
+      const accountMap = new Map(lockedRows.map((r) =&gt; [r.id, mapAccountRow(r)]));
+
+      for (const accountId of distinctAccountIds) {
+        const account = accountMap.get(accountId);
+        if (!account) {
+          throw new AccountNotFoundError(accountId);
+        }
+        if (account.status === 'FROZEN') {
+          throw new AccountFrozenError(accountId);
+        }
+        if (account.status !== 'ACTIVE') {
+          throw new AccountFrozenError(accountId);
+        }
+      }
+
+      for (const entry of input.entries) {
+        const account = accountMap.get(entry.accountId);
+        if (!account) {
+          throw new AccountNotFoundError(entry.accountId);
+        }
+        if (account.currency !== entry.currency) {
+          throw new CurrencyMismatchError(entry.accountId, account.currency, entry.currency);
+        }
+      }
+
+      const balanceDeltas = new Map&lt;string, bigint&gt;();
+      for (const entry of input.entries) {
+        const account = accountMap.get(entry.accountId);
+        if (!account) {
+          continue;
+        }
+        const balanceRow = await this.accountsRepo.getBalance(tx, entry.accountId);
+        const current = balanceRow?.balance ?? 0n;
+        const deltaKey = entry.accountId;
+        const running = balanceDeltas.get(deltaKey) ?? current;
+        const next = applyEntryToBalance(account.type, running, entry.direction, entry.amount);
+        balanceDeltas.set(deltaKey, next);
+      }
+
+      const transactionId = uuidv7();
+      const txn = await this.transactionsRepo.insert(tx, {
+        id: transactionId,
+        status: 'POSTED',
+        description: input.description ?? null,
+        externalRef: input.externalRef ?? null,
+      });
+
+      const entryRows = input.entries.map((e) =&gt; ({
+        transactionId,
+        accountId: e.accountId,
+        direction: e.direction,
+        amount: e.amount,
+        currency: e.currency,
+      }));
+
+      await this.entriesRepo.insertMany(tx, entryRows);
+
+      for (const [accountId, newBalance] of balanceDeltas) {
+        const balanceRow = await this.accountsRepo.getBalance(tx, accountId);
+        if (!balanceRow) {
+          throw new AccountNotFoundError(accountId);
+        }
+        const updated = await this.accountsRepo.updateBalance(
+          tx,
+          accountId,
+          newBalance,
+          balanceRow.version,
+        );
+        if (!updated) {
+          throw new Error(`Optimistic concurrency conflict on account ${accountId}`);
+        }
+      }
+
+      const insertedEntries = await this.entriesRepo.findByTransactionId(tx, transactionId);
+      const response: TransactionResponse = {
+        id: txn.id,
+        status: txn.status,
+        description: txn.description,
+        external_ref: txn.externalRef,
+        posted_at: txn.postedAt.toISOString(),
+        entries: insertedEntries.map((e) =&gt; ({
+          id: e.id.toString(),
+          transaction_id: e.transactionId,
+          account_id: e.accountId,
+          direction: e.direction,
+          amount: formatAmount(e.amount),
+          currency: e.currency.trim(),
+          posted_at: e.postedAt.toISOString(),
+        })),
+      };
+
+      if (idempotency) {
+        await this.idempotencyService.persist(tx, idempotency, 201, responseForCache ?? response);
+      }
+
+      ledgerTransactionsPostedTotal.inc();
+      ledgerEntriesPostedTotal.inc(input.entries.length);
+
+      return response;
+    });
+
+    return result;
+  }
+
+  async getTransaction(transactionId: string): Promise&lt;TransactionResponse&gt; {
+    const txn = await this.transactionsRepo.findById(this.db, transactionId);
+    if (!txn) {
+      throw new TransactionNotFoundError(transactionId);
+    }
+    const entryRows = await this.entriesRepo.findByTransactionId(this.db, transactionId);
+    return {
+      id: txn.id,
+      status: txn.status,
+      description: txn.description,
+      external_ref: txn.externalRef,
+      posted_at: txn.postedAt.toISOString(),
+      entries: entryRows.map((e) =&gt; ({
+        id: e.id.toString(),
+        transaction_id: e.transactionId,
+        account_id: e.accountId,
+        direction: e.direction,
+        amount: formatAmount(e.amount),
+        currency: e.currency.trim(),
+        posted_at: e.postedAt.toISOString(),
+      })),
+    };
+  }
+
+  static parsePostingEntries(
+    entries: {
+      account_id: string;
+      direction: EntryDirection;
+      amount: string;
+      currency: string;
+    }[],
+  ): PostingEntryInput[] {
+    return entries.map((e) =&gt; ({
+      accountId: e.account_id,
+      direction: e.direction,
+      amount: parseAmount(e.amount),
+      currency: assertSupportedCurrency(e.currency),
+    }));
+  }
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/services/idempotency.service.ts</span>
+            <span class="file-meta">76 lines · Idempotency helpers</span>
+          </header>
+          <div class="file-purpose">Canonical JSON hashing (sorted keys), cache lookup, conflict detection, and persist-in-transaction API used by services.</div>
+          <pre class="code-block"><code>import { createHash } from 'node:crypto';
+import type { IdempotencyRepository } from '../repositories/idempotency.repo.js';
+import type { DbExecutor } from '../repositories/accounts.repo.js';
+import { IdempotencyConflictError } from '../domain/errors.js';
+
+export type IdempotencyContext = {
+  key: string;
+  requestHash: string;
+};
+
+export type CachedIdempotencyResponse = {
+  status: number;
+  body: unknown;
+};
+
+/** Canonical JSON: sorted keys recursively, no whitespace. */
+export function canonicalize(value: unknown): string {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((v) =&gt; canonicalize(v)).join(',')}]`;
+  }
+  const obj = value as Record&lt;string, unknown&gt;;
+  const keys = Object.keys(obj).sort();
+  const parts = keys.map((k) =&gt; `${JSON.stringify(k)}:${canonicalize(obj[k])}`);
+  return `{${parts.join(',')}}`;
+}
+
+export function hashRequestBody(body: unknown): string {
+  return createHash('sha256').update(canonicalize(body)).digest('hex');
+}
+
+export class IdempotencyService {
+  constructor(private readonly repo: IdempotencyRepository) {}
+
+  async findCached(
+    db: DbExecutor,
+    ctx: IdempotencyContext,
+  ): Promise&lt;CachedIdempotencyResponse | 'conflict' | undefined&gt; {
+    const existing = await this.repo.findByKey(db, ctx.key);
+    if (!existing) {
+      return undefined;
+    }
+    if (existing.requestHash !== ctx.requestHash) {
+      return 'conflict';
+    }
+    return { status: existing.responseStatus, body: existing.responseBody };
+  }
+
+  assertNoConflict(existing: CachedIdempotencyResponse | 'conflict' | undefined): void {
+    if (existing === 'conflict') {
+      throw new IdempotencyConflictError();
+    }
+  }
+
+  async persist(
+    db: DbExecutor,
+    ctx: IdempotencyContext,
+    status: number,
+    body: unknown,
+  ): Promise&lt;void&gt; {
+    await this.repo.insert(db, {
+      key: ctx.key,
+      requestHash: ctx.requestHash,
+      responseStatus: status,
+      responseBody: body,
+    });
+  }
+
+  async cleanupExpired(db: DbExecutor, ttlHours: number): Promise&lt;number&gt; {
+    const cutoff = new Date(Date.now() - ttlHours * 60 * 60 * 1000);
+    return this.repo.deleteOlderThan(db, cutoff);
+  }
+}
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="http-layer">
+        <div class="section-banner" style="--accent:#006466">
+          <span class="section-icon">🌐</span>
+          <h2>HTTP Layer</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/routes/accounts.routes.ts</span>
+            <span class="file-meta">159 lines · Account REST API</span>
+          </header>
+          <div class="file-purpose">POST/GET /v1/accounts, balance, cursor-paginated entries. Thin handlers: Zod parse → service → JSON.</div>
+          <pre class="code-block"><code>import type { FastifyPluginAsync } from 'fastify';
+import { Buffer } from 'node:buffer';
+import { AccountsRepository } from '../../repositories/accounts.repo.js';
+import { EntriesRepository } from '../../repositories/entries.repo.js';
+import { IdempotencyRepository } from '../../repositories/idempotency.repo.js';
+import { AccountsService } from '../../services/accounts.service.js';
+import { IdempotencyService } from '../../services/idempotency.service.js';
+import type { Database } from '../../db/client.js';
+import { createAccountRequestSchema } from '../schemas/accounts.schema.js';
+
+export type AccountsRoutesOptions = {
+  db: Database;
+};
+
+function encodeCursor(postedAt: Date, id: bigint): string {
+  return Buffer.from(
+    JSON.stringify({ postedAt: postedAt.toISOString(), id: id.toString() }),
+    'utf8',
+  ).toString('base64url');
+}
+
+function decodeCursor(cursor: string): { postedAt: Date; id: bigint } | undefined {
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as {
+      postedAt: string;
+      id: string;
+    };
+    return { postedAt: new Date(parsed.postedAt), id: BigInt(parsed.id) };
+  } catch {
+    return undefined;
+  }
+}
+
+export const accountsRoutes: FastifyPluginAsync&lt;AccountsRoutesOptions&gt; = async (fastify, opts) =&gt; {
+  const accountsRepo = new AccountsRepository();
+  const entriesRepo = new EntriesRepository();
+  const idempotencyService = new IdempotencyService(new IdempotencyRepository());
+  const service = new AccountsService(opts.db, accountsRepo, entriesRepo, idempotencyService);
+
+  fastify.post(
+    '/v1/accounts',
+    {
+      schema: {
+        tags: ['accounts'],
+        description: 'Create a ledger account',
+        body: {
+          type: 'object',
+          required: ['name', 'type', 'currency'],
+          properties: {
+            name: { type: 'string', minLength: 1, maxLength: 100 },
+            type: {
+              type: 'string',
+              enum: ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'],
+            },
+            currency: { type: 'string', minLength: 3, maxLength: 3 },
+          },
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string' },
+              type: { type: 'string' },
+              currency: { type: 'string' },
+              status: { type: 'string' },
+              created_at: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) =&gt; {
+      if (reply.sent) {
+        return;
+      }
+
+      const body = createAccountRequestSchema.parse(request.body);
+      const response = await service.createAccount(
+        { name: body.name, type: body.type, currency: body.currency },
+        request.idempotency,
+      );
+      return reply.status(201).send(response);
+    },
+  );
+
+  fastify.get(
+    '/v1/accounts/:id',
+    {
+      schema: {
+        tags: ['accounts'],
+        params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } } },
+      },
+    },
+    async (request) =&gt; {
+      const { id } = request.params as { id: string };
+      const account = await service.getAccount(id);
+      return service.toAccountResponse(account);
+    },
+  );
+
+  fastify.get(
+    '/v1/accounts/:id/balance',
+    {
+      schema: {
+        tags: ['accounts'],
+        params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } } },
+      },
+    },
+    async (request) =&gt; {
+      const { id } = request.params as { id: string };
+      return service.getBalance(id);
+    },
+  );
+
+  fastify.get(
+    '/v1/accounts/:id/entries',
+    {
+      schema: {
+        tags: ['accounts'],
+        params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } } },
+        querystring: {
+          type: 'object',
+          properties: {
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 50 },
+            cursor: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (request) =&gt; {
+      const { id } = request.params as { id: string };
+      const query = request.query as { limit?: number; cursor?: string };
+      const limit = query.limit ?? 50;
+
+      await service.getAccount(id);
+
+      const cursor = query.cursor ? decodeCursor(query.cursor) : undefined;
+      const rows = await entriesRepo.listByAccount(opts.db, id, limit, cursor);
+
+      const entries = rows.map((e) =&gt; ({
+        id: e.id.toString(),
+        transaction_id: e.transactionId,
+        account_id: e.accountId,
+        direction: e.direction,
+        amount: e.amount.toString(),
+        currency: e.currency.trim(),
+        posted_at: e.postedAt.toISOString(),
+      }));
+
+      const last = rows.at(-1);
+      const next_cursor =
+        rows.length === limit &amp;&amp; last ? encodeCursor(last.postedAt, last.id) : null;
+
+      return { entries, next_cursor };
+    },
+  );
+};
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/routes/transactions.routes.ts</span>
+            <span class="file-meta">90 lines · Transaction REST API</span>
+          </header>
+          <div class="file-purpose">POST /v1/transactions and GET by id. Delegates posting rules to TransactionsService.</div>
+          <pre class="code-block"><code>import type { FastifyPluginAsync } from 'fastify';
+import type { Database } from '../../db/client.js';
+import { AccountsRepository } from '../../repositories/accounts.repo.js';
+import { EntriesRepository } from '../../repositories/entries.repo.js';
+import { IdempotencyRepository } from '../../repositories/idempotency.repo.js';
+import { TransactionsRepository } from '../../repositories/transactions.repo.js';
+import { IdempotencyService } from '../../services/idempotency.service.js';
+import { TransactionsService } from '../../services/transactions.service.js';
+import { postTransactionRequestSchema } from '../schemas/transactions.schema.js';
+
+export type TransactionsRoutesOptions = {
+  db: Database;
+};
+
+export const transactionsRoutes: FastifyPluginAsync&lt;TransactionsRoutesOptions&gt; = async (
+  fastify,
+  opts,
+) =&gt; {
+  const service = new TransactionsService(
+    opts.db,
+    new AccountsRepository(),
+    new EntriesRepository(),
+    new TransactionsRepository(),
+    new IdempotencyService(new IdempotencyRepository()),
+  );
+
+  fastify.post(
+    '/v1/transactions',
+    {
+      schema: {
+        tags: ['transactions'],
+        description: 'Post a balanced double-entry transaction',
+        body: {
+          type: 'object',
+          required: ['entries'],
+          properties: {
+            description: { type: 'string' },
+            external_ref: { type: 'string' },
+            entries: {
+              type: 'array',
+              minItems: 2,
+              items: {
+                type: 'object',
+                required: ['account_id', 'direction', 'amount', 'currency'],
+                properties: {
+                  account_id: { type: 'string', format: 'uuid' },
+                  direction: { type: 'string', enum: ['DEBIT', 'CREDIT'] },
+                  amount: { type: 'string' },
+                  currency: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) =&gt; {
+      if (reply.sent) {
+        return;
+      }
+
+      const body = postTransactionRequestSchema.parse(request.body);
+      const entries = TransactionsService.parsePostingEntries(body.entries);
+      const response = await service.postTransaction(
+        {
+          description: body.description,
+          externalRef: body.external_ref,
+          entries,
+        },
+        request.idempotency,
+      );
+      return reply.status(201).send(response);
+    },
+  );
+
+  fastify.get(
+    '/v1/transactions/:id',
+    {
+      schema: {
+        tags: ['transactions'],
+        params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } } },
+      },
+    },
+    async (request) =&gt; {
+      const { id } = request.params as { id: string };
+      return service.getTransaction(id);
+    },
+  );
+};
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/routes/health.routes.ts</span>
+            <span class="file-meta">31 lines · Ops endpoints</span>
+          </header>
+          <div class="file-purpose">/healthz liveness, /readyz DB check, /metrics Prometheus exposition with pool gauges.</div>
+          <pre class="code-block"><code>import type { FastifyPluginAsync } from 'fastify';
+import type pg from 'pg';
+import { checkDbConnectivity } from '../../db/client.js';
+import {
+  getMetricsRegistry,
+  getMetricsText,
+  updatePoolMetrics,
+} from '../../observability/metrics.js';
+
+export type HealthRoutesOptions = {
+  pool: pg.Pool;
+};
+
+export const healthRoutes: FastifyPluginAsync&lt;HealthRoutesOptions&gt; = async (fastify, opts) =&gt; {
+  fastify.get('/healthz', async () =&gt; ({ status: 'ok' }));
+
+  fastify.get('/readyz', async (_request, reply) =&gt; {
+    const ok = await checkDbConnectivity(opts.pool);
+    if (!ok) {
+      return reply.status(503).send({ status: 'unavailable' });
+    }
+    return { status: 'ready' };
+  });
+
+  fastify.get('/metrics', async (_request, reply) =&gt; {
+    updatePoolMetrics(opts.pool);
+    const metrics = await getMetricsText();
+    return reply.header('Content-Type', getMetricsRegistry().contentType).send(metrics);
+  });
+};
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/idempotency.plugin.ts</span>
+            <span class="file-meta">46 lines · Idempotency-Key enforcement</span>
+          </header>
+          <div class="file-purpose">Requires header on POST, hashes body, returns cached response on replay, 409 on key/body mismatch. Business persist happens inside service transaction.</div>
+          <pre class="code-block"><code>import type { FastifyPluginAsync } from 'fastify';
+import type { Database } from '../db/client.js';
+import { IdempotencyConflictError, IdempotencyKeyRequiredError } from '../domain/errors.js';
+import { IdempotencyRepository } from '../repositories/idempotency.repo.js';
+import {
+  hashRequestBody,
+  IdempotencyService,
+  type IdempotencyContext,
+} from '../services/idempotency.service.js';
+
+export type IdempotencyPluginOptions = {
+  db: Database;
+};
+
+export const idempotencyPlugin: FastifyPluginAsync&lt;IdempotencyPluginOptions&gt; = async (
+  fastify,
+  opts,
+) =&gt; {
+  const idempotencyService = new IdempotencyService(new IdempotencyRepository());
+
+  fastify.addHook('preHandler', async (request, reply) =&gt; {
+    if (request.method !== 'POST') {
+      return;
+    }
+
+    const keyHeader = request.headers['idempotency-key'];
+    const key = typeof keyHeader === 'string' ? keyHeader.trim() : undefined;
+    if (!key || key.length === 0) {
+      throw new IdempotencyKeyRequiredError();
+    }
+
+    const requestHash = hashRequestBody(request.body);
+    const ctx: IdempotencyContext = { key, requestHash };
+    request.idempotency = ctx;
+
+    const lookup = await idempotencyService.findCached(opts.db, ctx);
+    if (lookup === 'conflict') {
+      throw new IdempotencyConflictError();
+    }
+    if (lookup) {
+      request.idempotencyReplay = lookup;
+      void reply.status(lookup.status).send(lookup.body);
+    }
+  });
+};
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/request-context.plugin.ts</span>
+            <span class="file-meta">45 lines · Request tracing</span>
+          </header>
+          <div class="file-purpose">Propagates request_id and trace_id into Pino child loggers; logs route, method, status, duration_ms on response.</div>
+          <pre class="code-block"><code>import { randomUUID } from 'node:crypto';
+import type { FastifyPluginAsync } from 'fastify';
+import type { IdempotencyContext } from '../services/idempotency.service.js';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    requestId: string;
+    traceId: string;
+    idempotency?: IdempotencyContext;
+    idempotencyReplay?: { status: number; body: unknown };
+  }
+}
+
+export const requestContextPlugin: FastifyPluginAsync = async (fastify) =&gt; {
+  fastify.addHook('onRequest', async (request) =&gt; {
+    const incoming =
+      (typeof request.headers['x-request-id'] === 'string'
+        ? request.headers['x-request-id']
+        : undefined) ?? randomUUID();
+    const trace =
+      (typeof request.headers['x-trace-id'] === 'string'
+        ? request.headers['x-trace-id']
+        : undefined) ?? incoming;
+
+    request.requestId = incoming;
+    request.traceId = trace;
+    request.log = request.log.child({
+      request_id: incoming,
+      trace_id: trace,
+    });
+  });
+
+  fastify.addHook('onResponse', async (request, reply) =&gt; {
+    const route = request.routeOptions.url ?? request.url;
+    request.log.info({
+      request_id: request.requestId,
+      trace_id: request.traceId,
+      route,
+      method: request.method,
+      status: reply.statusCode,
+      duration_ms: reply.elapsedTime,
+    });
+  });
+};
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/error-handler.ts</span>
+            <span class="file-meta">126 lines · RFC 7807 mapping</span>
+          </header>
+          <div class="file-purpose">Maps DomainError and Zod failures to problem+json; surfaces Postgres double-entry violation messages without rewriting DB text.</div>
+          <pre class="code-block"><code>import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import { ZodError } from 'zod';
+import { DomainError, DoubleEntryViolationError } from '../domain/errors.js';
+
+type ProblemDetails = {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  instance?: string;
+  code?: string;
+};
+
+function extractErrorMessage(err: unknown): string {
+  if (!(err instanceof Error)) {
+    return '';
+  }
+  let message = err.message;
+  let cause: unknown = err.cause;
+  while (cause instanceof Error) {
+    message += ` ${cause.message}`;
+    cause = cause.cause;
+  }
+  return message;
+}
+
+function isPostgresError(err: unknown): err is { code: string; message: string } {
+  if (typeof err !== 'object' || err === null) {
+    return false;
+  }
+  const record = err as Record&lt;string, unknown&gt;;
+  return typeof record['code'] === 'string' &amp;&amp; typeof record['message'] === 'string';
+}
+
+function mapDomainError(error: DomainError, instance: string): ProblemDetails {
+  const base = {
+    type: `https://ledger.local/problems/${error.code}`,
+    detail: error.message,
+    instance,
+    code: error.code,
+  };
+
+  switch (error.code) {
+    case 'account_not_found':
+    case 'transaction_not_found':
+      return { ...base, title: 'Not Found', status: 404 };
+    case 'account_frozen':
+    case 'idempotency_conflict':
+      return { ...base, title: 'Conflict', status: 409 };
+    case 'idempotency_key_required':
+      return { ...base, title: 'Bad Request', status: 400 };
+    case 'unbalanced_transaction':
+    case 'currency_mismatch':
+    case 'unsupported_currency':
+    case 'invalid_amount':
+    case 'double_entry_violation':
+      return { ...base, title: 'Unprocessable Entity', status: 422 };
+    default:
+      return { ...base, title: 'Bad Request', status: 400 };
+  }
+}
+
+export function errorHandler(
+  error: FastifyError,
+  request: FastifyRequest,
+  reply: FastifyReply,
+): void {
+  const instance = request.url;
+
+  if (error instanceof DomainError) {
+    const problem = mapDomainError(error, instance);
+    void reply.status(problem.status).type('application/problem+json').send(problem);
+    return;
+  }
+
+  if (error instanceof ZodError) {
+    const problem: ProblemDetails = {
+      type: 'https://ledger.local/problems/validation_error',
+      title: 'Validation Error',
+      status: 400,
+      detail: error.message,
+      instance,
+      code: 'validation_error',
+    };
+    void reply.status(400).type('application/problem+json').send(problem);
+    return;
+  }
+
+  const pgMessage = extractErrorMessage(error);
+  if (
+    (isPostgresError(error) &amp;&amp; error.message.includes('Double-entry violation')) ||
+    pgMessage.includes('Double-entry violation')
+  ) {
+    const problem = mapDomainError(
+      new DoubleEntryViolationError(pgMessage || error.message),
+      instance,
+    );
+    void reply.status(problem.status).type('application/problem+json').send(problem);
+    return;
+  }
+
+  if (error.validation) {
+    const problem: ProblemDetails = {
+      type: 'https://ledger.local/problems/validation_error',
+      title: 'Validation Error',
+      status: 400,
+      detail: error.message,
+      instance,
+      code: 'validation_error',
+    };
+    void reply.status(400).type('application/problem+json').send(problem);
+    return;
+  }
+
+  request.log.error({ err: error }, 'Unhandled error');
+  const problem: ProblemDetails = {
+    type: 'https://ledger.local/problems/internal_error',
+    title: 'Internal Server Error',
+    status: 500,
+    detail: 'An unexpected error occurred',
+    instance,
+    code: 'internal_error',
+  };
+  void reply.status(500).type('application/problem+json').send(problem);
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/schemas/accounts.schema.ts</span>
+            <span class="file-meta">47 lines · Account wire contracts</span>
+          </header>
+          <div class="file-purpose">Zod request/response shapes for accounts, balances, and statement entries — shared types for routes and tests.</div>
+          <pre class="code-block"><code>import { z } from 'zod';
+
+export const accountTypeSchema = z.enum(['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE']);
+
+export const accountStatusSchema = z.enum(['ACTIVE', 'FROZEN', 'CLOSED']);
+
+export const createAccountRequestSchema = z.object({
+  name: z.string().min(1).max(100),
+  type: accountTypeSchema,
+  currency: z.string().length(3),
+});
+
+export const accountResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  type: accountTypeSchema,
+  currency: z.string().length(3),
+  status: accountStatusSchema,
+  created_at: z.string().datetime(),
+});
+
+export const balanceResponseSchema = z.object({
+  account_id: z.string().uuid(),
+  currency: z.string().length(3),
+  balance: z.string(),
+  journal_balance: z.string(),
+  as_of: z.string().datetime(),
+});
+
+export const entryStatementSchema = z.object({
+  id: z.string(),
+  transaction_id: z.string().uuid(),
+  account_id: z.string().uuid(),
+  direction: z.enum(['DEBIT', 'CREDIT']),
+  amount: z.string(),
+  currency: z.string().length(3),
+  posted_at: z.string().datetime(),
+});
+
+export const entriesListResponseSchema = z.object({
+  entries: z.array(entryStatementSchema),
+  next_cursor: z.string().nullable(),
+});
+
+export type CreateAccountRequest = z.infer&lt;typeof createAccountRequestSchema&gt;;
+export type AccountResponse = z.infer&lt;typeof accountResponseSchema&gt;;
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/http/schemas/transactions.schema.ts</span>
+            <span class="file-meta">36 lines · Transaction wire contracts</span>
+          </header>
+          <div class="file-purpose">Zod schemas for posting payloads (amount as string) and transaction responses.</div>
+          <pre class="code-block"><code>import { z } from 'zod';
+
+export const entryInputSchema = z.object({
+  account_id: z.string().uuid(),
+  direction: z.enum(['DEBIT', 'CREDIT']),
+  amount: z.string().regex(/^\d+$/),
+  currency: z.string().length(3),
+});
+
+export const postTransactionRequestSchema = z.object({
+  description: z.string().max(500).optional(),
+  external_ref: z.string().max(200).optional(),
+  entries: z.array(entryInputSchema).min(2),
+});
+
+export const entryResponseSchema = z.object({
+  id: z.string(),
+  transaction_id: z.string().uuid(),
+  account_id: z.string().uuid(),
+  direction: z.enum(['DEBIT', 'CREDIT']),
+  amount: z.string(),
+  currency: z.string().length(3),
+  posted_at: z.string().datetime(),
+});
+
+export const transactionResponseSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(['POSTED', 'REVERSED']),
+  description: z.string().nullable(),
+  external_ref: z.string().nullable(),
+  posted_at: z.string().datetime(),
+  entries: z.array(entryResponseSchema),
+});
+
+export type PostTransactionRequest = z.infer&lt;typeof postTransactionRequestSchema&gt;;
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="jobs">
+        <div class="section-banner" style="--accent:#bc6c25">
+          <span class="section-icon">🔍</span>
+          <h2>Jobs</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/jobs/balance-verification.ts</span>
+            <span class="file-meta">103 lines · Balance reconciliation</span>
+          </header>
+          <div class="file-purpose">Compares materialised account_balances to journal-derived totals per account. CLI via npm run verify-balances; optional interval scheduler; emits ledger_balance_drift_total on mismatch.</div>
+          <pre class="code-block"><code>import type { Database } from '../db/client.js';
+import { createDbContext } from '../db/client.js';
+import { loadConfig } from '../config.js';
+import { balanceFromJournal, mapAccountRow } from '../domain/account.js';
+import { getLogger } from '../observability/logger.js';
+import { ledgerBalanceDriftTotal } from '../observability/metrics.js';
+import { AccountsRepository } from '../repositories/accounts.repo.js';
+import { EntriesRepository } from '../repositories/entries.repo.js';
+
+export type BalanceDrift = {
+  accountId: string;
+  materialised: string;
+  journal: string;
+  delta: string;
+};
+
+export type BalanceVerificationReport = {
+  checkedAt: string;
+  accountsChecked: number;
+  drifts: BalanceDrift[];
+};
+
+export async function verifyBalances(db: Database): Promise&lt;BalanceVerificationReport&gt; {
+  const accountsRepo = new AccountsRepository();
+  const entriesRepo = new EntriesRepository();
+  const logger = getLogger();
+
+  const accountIds = await accountsRepo.listAllAccountIds(db);
+  const drifts: BalanceDrift[] = [];
+
+  for (const accountId of accountIds) {
+    const accountRow = await accountsRepo.findById(db, accountId);
+    if (!accountRow) {
+      continue;
+    }
+    const account = mapAccountRow(accountRow);
+    const balanceRow = await accountsRepo.getBalance(db, accountId);
+    if (!balanceRow) {
+      continue;
+    }
+
+    const { debits, credits } = await entriesRepo.sumJournalByAccount(db, accountId);
+    const journalBalance = balanceFromJournal(account.type, debits, credits);
+    const materialised = balanceRow.balance;
+
+    if (journalBalance !== materialised) {
+      drifts.push({
+        accountId,
+        materialised: materialised.toString(),
+        journal: journalBalance.toString(),
+        delta: (materialised - journalBalance).toString(),
+      });
+    }
+  }
+
+  if (drifts.length &gt; 0) {
+    ledgerBalanceDriftTotal.inc(drifts.length);
+    logger.error({ drifts, count: drifts.length }, 'Balance drift detected');
+  } else {
+    logger.info({ accountsChecked: accountIds.length }, 'Balance verification passed');
+  }
+
+  return {
+    checkedAt: new Date().toISOString(),
+    accountsChecked: accountIds.length,
+    drifts,
+  };
+}
+
+async function runCli(): Promise&lt;void&gt; {
+  const config = loadConfig();
+  const { db, pool } = createDbContext(config);
+  try {
+    const report = await verifyBalances(db);
+    console.log(JSON.stringify(report, null, 2));
+    if (report.drifts.length &gt; 0) {
+      process.exit(1);
+    }
+  } finally {
+    await pool.end();
+  }
+}
+
+const isCli = process.argv[1]?.includes('balance-verification') &amp;&amp; process.argv.includes('--cli');
+if (isCli) {
+  runCli().catch((err: unknown) =&gt; {
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+export function startBalanceVerificationScheduler(
+  db: Database,
+  intervalMs: number,
+): NodeJS.Timeout | undefined {
+  if (intervalMs &lt;= 0) {
+    return undefined;
+  }
+  return setInterval(() =&gt; {
+    void verifyBalances(db);
+  }, intervalMs);
+}
+</code></pre>
+        </article>
+      </section>
+      <section class="doc-section" id="observability">
+        <div class="section-banner" style="--accent:#2d6a4f">
+          <span class="section-icon">📊</span>
+          <h2>Observability</h2>
+        </div>
+        
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/observability/logger.ts</span>
+            <span class="file-meta">36 lines · Structured logging</span>
+          </header>
+          <div class="file-purpose">Pino with JSON in production, pretty in dev. Redacts Idempotency-Key and auth headers from logs.</div>
+          <pre class="code-block"><code>import pino from 'pino';
+import type { AppConfig } from '../config.js';
+
+let rootLogger: pino.Logger | undefined;
+
+export function createLogger(config: AppConfig): pino.Logger {
+  const isDev = config.nodeEnv === 'development';
+  const options: pino.LoggerOptions = {
+    level: config.logLevel,
+    redact: {
+      paths: [
+        'req.headers.authorization',
+        'req.headers[&quot;idempotency-key&quot;]',
+        'req.headers.idempotency-key',
+        'headers.authorization',
+        'headers[&quot;idempotency-key&quot;]',
+        'headers.idempotency-key',
+      ],
+      censor: '[REDACTED]',
+    },
+  };
+  if (isDev) {
+    options.transport = {
+      target: 'pino-pretty',
+      options: { colorize: true, translateTime: 'SYS:standard' },
+    };
+  }
+  rootLogger = pino(options);
+  return rootLogger;
+}
+
+export function getLogger(): pino.Logger {
+  rootLogger ??= pino({ level: 'info' });
+  return rootLogger;
+}
+</code></pre>
+        </article>
+        <article class="file-card">
+          <header class="file-header">
+            <span class="file-path">src/observability/metrics.ts</span>
+            <span class="file-meta">71 lines · Prometheus metrics</span>
+          </header>
+          <div class="file-purpose">http_requests_total, http_request_duration_seconds, ledger_* counters, db_pool_* gauges for operability dashboards.</div>
+          <pre class="code-block"><code>import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
+import type pg from 'pg';
+
+const register = new Registry();
+collectDefaultMetrics({ register });
+
+export const httpRequestsTotal = new Counter({
+  name: 'http_requests_total',
+  help: 'Total HTTP requests',
+  labelNames: ['method', 'route', 'status'] as const,
+  registers: [register],
+});
+
+export const httpRequestDurationSeconds = new Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status'] as const,
+  buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
+  registers: [register],
+});
+
+export const ledgerTransactionsPostedTotal = new Counter({
+  name: 'ledger_transactions_posted_total',
+  help: 'Total ledger transactions posted',
+  registers: [register],
+});
+
+export const ledgerEntriesPostedTotal = new Counter({
+  name: 'ledger_entries_posted_total',
+  help: 'Total ledger entries posted',
+  registers: [register],
+});
+
+export const ledgerBalanceDriftTotal = new Counter({
+  name: 'ledger_balance_drift_total',
+  help: 'Accounts where materialised balance diverges from journal',
+  registers: [register],
+});
+
+const poolSizeGauge = new Gauge({
+  name: 'db_pool_size',
+  help: 'Database pool total connections',
+  registers: [register],
+});
+
+const poolIdleGauge = new Gauge({
+  name: 'db_pool_idle',
+  help: 'Database pool idle connections',
+  registers: [register],
+});
+
+const poolWaitingGauge = new Gauge({
+  name: 'db_pool_waiting',
+  help: 'Database pool waiting requests',
+  registers: [register],
+});
+
+export function updatePoolMetrics(pool: pg.Pool): void {
+  poolSizeGauge.set(pool.totalCount);
+  poolIdleGauge.set(pool.idleCount);
+  poolWaitingGauge.set(pool.waitingCount);
+}
+
+export function getMetricsRegistry(): Registry {
+  return register;
+}
+
+export async function getMetricsText(): Promise&lt;string&gt; {
+  return register.metrics();
+}
+</code></pre>
+        </article>
+      </section>
+  </div>
+</div>
+</body>
+</html>
